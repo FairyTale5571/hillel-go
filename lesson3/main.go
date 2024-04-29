@@ -1,107 +1,69 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
 
-type SomeStruct struct {
-	Field1 string
-	Field2 string
-	Field3 string
-}
-
-func someRuneFunc() func(r rune) bool {
-	return func(r rune) bool {
-		return false
-	}
-}
-
 func main() {
-	// time, strconv, strings
+	reader := bufio.NewReader(os.Stdin)
 
-	// 05.12.2024 02:52:33
-	// 02.52.22 - 12:05:2024
-	// 02:54:22 05.12.2024
-	//t, err := time.Parse("15:04:05 02.01.2006", "02:54:22 05.12.2024")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//fmt.Println(t.Compare(time.Now()))
+	for {
+		fmt.Print("Введіть ім'я співробітника: ")
+		name, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Помилка вводу")
+			continue
+		}
+		name = strings.TrimSpace(name)
+		weekHours := 0.0
+		daysOfWeek := []string{"Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"}
+		fmt.Println("Якщо співробітник не прийшов в цей день на роботу введіть ʼ-ʼ")
+		for i := 0; i < len(daysOfWeek); i++ {
+			for {
+				fmt.Printf("Коли співробітник прийшов на роботу в %s? Введіть в (ГГ:ХХ): ", daysOfWeek[i])
+				comelInput, _ := reader.ReadString('\n')
+				if strings.TrimSpace(strings.TrimSpace(comelInput)) == "-" {
+					break
+				}
+				comeTime, err := time.Parse("15:04", strings.TrimSpace(comelInput))
+				if err != nil {
+					fmt.Println("Помилка вводу")
+					continue
+				}
 
-	//var number int64 = 517983457256213
-	//numberString := "100"
+				fmt.Printf("Коли співробітник пішов з роботи в %s? Введіть в (ГГ:ХХ): ", daysOfWeek[i])
+				wentInput, _ := reader.ReadString('\n')
+				wentTime, err := time.Parse("15:04", strings.TrimSpace(wentInput))
+				if err != nil {
+					fmt.Println("Помилка вводу")
+					continue
+				}
 
-	//parsedNumber, err := strconv.Atoi(numberString)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Sprintf("%d", number)
-	//numberString = strconv.Itoa(number)
+				if wentTime.Before(comeTime) {
+					fmt.Printf("В %s співробітник не міг піти раніще, ніж прийшов!\n", daysOfWeek[i])
+					continue
+				}
+				hoursWorked := wentTime.Sub(comeTime).Hours()
+				fmt.Printf("%s працював(ла) %.2f годин в %s.\n", name, hoursWorked, daysOfWeek[i])
+				weekHours += hoursWorked
+				break
+			}
+		}
+		fmt.Printf("Кількість годин, відпрацьованих %s за тиждень: %.2f\n", name, weekHours)
 
-	//numberString = strconv.FormatInt(number, 16)
-	//fmt.Println(numberString)
-	//
-	//var someFloat float32 = 125.35161681
-	//
-	//floatString := strconv.FormatFloat(float64(someFloat), 'f', 10, 32)
-	//fmt.Printf("%.2f%%", someFloat)
-	//
-	//boolean := strconv.FormatBool(true)
-	//_ = boolean
+		fmt.Print("Бажаєте підрахувати години іншого співробітника? (так/ні): ")
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Помилка при читанні вводу:", err)
+			break
+		}
+		if strings.TrimSpace(response) != "так" {
+			break
+		}
 
-	someStringWithSpaces := "Johnk Wick"
-	someStringWithSpaces = strings.TrimLeft(someStringWithSpaces, "@")
-	_ = someStringWithSpaces
-
-	i := strings.Compare(someStringWithSpaces, "John Wic")
-	_ = i
-
-	someStringWithSpaces = strings.ToUpper(someStringWithSpaces)
-	_ = someStringWithSpaces
-
-	someStringWithSpaces = strings.ToLower(someStringWithSpaces)
-	_ = someStringWithSpaces
-
-	strings.Contains(someStringWithSpaces, "wick")
-
-	//fmt.Println(strings.ContainsFunc(someStringWithSpaces, someRuneFunc()))
-
-	fmt.Println(strings.HasSuffix(someStringWithSpaces, "ck"))
-
-	//someStringWithSpaces = strings.Replace(someStringWithSpaces, "k", "a", -1)
-	//_ = someStringWithSpaces
-
-	address := "м. Київ, вул. Хрещатик, буд. 55"
-	someSlice := strings.Split(address, ", ")
-	_ = someSlice
-
-	joinedString := strings.Join(someSlice, "|")
-	_ = joinedString
-
-	someStruct := SomeStruct{
-		Field1: "John",
-		Field2: "",
-		Field3: "Wick",
 	}
-
-	builder := strings.Builder{}
-	if someStruct.Field1 != "" {
-		builder.WriteString(someStruct.Field1 + ", ")
-	}
-	if someStruct.Field2 != "" {
-		builder.WriteString(someStruct.Field2 + ", ")
-	}
-	if someStruct.Field3 != "" {
-		builder.WriteString(someStruct.Field3 + ", ")
-	}
-	str := builder.String()
-	str = strings.TrimRight(str, ", ")
-	str += "!"
-	_ = str
-
-	time.Sleep(5 * time.Second)
-	fmt.Println("End of program")
 }

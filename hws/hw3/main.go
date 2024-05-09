@@ -48,7 +48,7 @@ var defaultDepartureTime, _ = time.Parse(timeLayout, "17:00")
 var workdayTime = defaultDepartureTime.Sub(defaultArrivalTime)
 
 var report = Report{
-	"John Doe": &Employee{
+	"Arthur Morgan": &Employee{
 		TimeEntries: map[weekDays]TimeEntry{
 			Monday: {
 				ArrivalTime:   defaultArrivalTime,
@@ -58,7 +58,7 @@ var report = Report{
 		},
 		TotalTimeWorked: workdayTime,
 	},
-	"Jane Smith": &Employee{
+	"John Marston": &Employee{
 		TimeEntries: map[weekDays]TimeEntry{
 			Tuesday: {
 				ArrivalTime:   defaultArrivalTime,

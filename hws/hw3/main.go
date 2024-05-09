@@ -157,44 +157,41 @@ func getWorkTimes() (time.Time, time.Time) {
 }
 func main() {
 	for {
-		for {
-			fmt.Println("\n\033[1;36mChoose an option:\033[0m")
-			fmt.Println("1) Add a new employee")
-			fmt.Println("2) Add arrival/departure time(hh:mm)")
-			fmt.Println("3) Show working hours report")
-			fmt.Println("0) Exit")
-			choice := getInput("Enter your choice:\n")
+		fmt.Println("\n\033[1;36mChoose an option:\033[0m")
+		fmt.Println("1) Add a new employee")
+		fmt.Println("2) Add arrival/departure time(hh:mm)")
+		fmt.Println("3) Show working hours report")
+		fmt.Println("0) Exit")
+		choice := getInput("Enter your choice:\n")
 
-			switch choice {
-			case "1":
-				name := getInput("Enter employee name:\n")
-				addEmployee(name)
-			case "2":
-				fmt.Println("Choose employee:")
-				employees := make([]string, 0, len(report))
-				for name := range report {
-					employees = append(employees, name)
-				}
-				employeeIndex := getEmployeeIndex(employees)
-				employee := employees[employeeIndex]
-				weekday := getWeekdayInput()
-				arrivalTime, departureTime := getWorkTimes()
-
-				report[employee].TimeEntries[weekday] = TimeEntry{
-					ArrivalTime:   arrivalTime,
-					DepartureTime: departureTime,
-					TimeWorked:    departureTime.Sub(arrivalTime),
-				}
-				report[employee].TotalTimeWorked += report[employee].TimeEntries[weekday].TimeWorked
-			case "3":
-				printReport()
-			case "0":
-				fmt.Println("\033[1;31mExiting...\033[0m")
-				return
-			default:
-				fmt.Println("\033[1;31mInvalid option chosen.\033[0m")
+		switch choice {
+		case "1":
+			name := getInput("Enter employee name:\n")
+			addEmployee(name)
+		case "2":
+			fmt.Println("Choose employee:")
+			employees := make([]string, 0, len(report))
+			for name := range report {
+				employees = append(employees, name)
 			}
-		}
+			employeeIndex := getEmployeeIndex(employees)
+			employee := employees[employeeIndex]
+			weekday := getWeekdayInput()
+			arrivalTime, departureTime := getWorkTimes()
 
+			report[employee].TimeEntries[weekday] = TimeEntry{
+				ArrivalTime:   arrivalTime,
+				DepartureTime: departureTime,
+				TimeWorked:    departureTime.Sub(arrivalTime),
+			}
+			report[employee].TotalTimeWorked += report[employee].TimeEntries[weekday].TimeWorked
+		case "3":
+			printReport()
+		case "0":
+			fmt.Println("\033[1;31mExiting...\033[0m")
+			return
+		default:
+			fmt.Println("\033[1;31mInvalid option chosen.\033[0m")
+		}
 	}
 }

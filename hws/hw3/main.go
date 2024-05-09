@@ -158,8 +158,7 @@ func getWorkTimes() (time.Time, time.Time) {
 func main() {
 	for {
 		for {
-			printReport()
-			fmt.Println("\033[1;36mChoose an option:\033[0m")
+			fmt.Println("\n\033[1;36mChoose an option:\033[0m")
 			fmt.Println("1) Add a new employee")
 			fmt.Println("2) Add arrival/departure time(hh:mm)")
 			fmt.Println("3) Show working hours report")

@@ -129,6 +129,32 @@ func addEmployee(name string) {
 	report[name] = &employee
 }
 
+func getEmployeeIndex(employees []string) int {
+	for {
+		for i, name := range employees {
+			fmt.Println("Index: ", i, "Name: ", name)
+		}
+		employeeIndexStr := getInput("Enter employee index:\n")
+		employeeIndex, err := strconv.Atoi(employeeIndexStr)
+		if err != nil || employeeIndex < 0 || employeeIndex >= len(employees) {
+			fmt.Println("\033[1;31mInvalid input. Please enter a valid index.\033[0m")
+			continue
+		}
+		return employeeIndex
+	}
+}
+
+func getWorkTimes() (time.Time, time.Time) {
+	for {
+		arrivalTime := getTimeInput("Enter arrival time(hh:mm):\n")
+		departureTime := getTimeInput("Enter departure time(hh:mm):\n")
+		if departureTime.Before(arrivalTime) {
+			fmt.Println("\033[1;31mEmployee can't leave before arrival.\033[0m")
+			continue
+		}
+		return arrivalTime, departureTime
+	}
+}
 func main() {
 	for {
 		for {
@@ -150,27 +176,10 @@ func main() {
 				for name := range report {
 					employees = append(employees, name)
 				}
-				for i, name := range employees {
-					fmt.Println("Index: ", i, "Name: ", name)
-				}
-				employeeIndexStr := getInput("Enter employee index:\n")
-				employeeIndex, err := strconv.Atoi(employeeIndexStr)
-				if err != nil || employeeIndex < 0 || employeeIndex >= len(employees) {
-					fmt.Println("\033[1;31mInvalid input. Please enter a valid index.\033[0m")
-					continue
-				}
+				employeeIndex := getEmployeeIndex(employees)
 				employee := employees[employeeIndex]
 				weekday := getWeekdayInput()
-				var arrivalTime, departureTime time.Time
-				for {
-					arrivalTime = getTimeInput("Enter arrival time(hh:mm):\n")
-					departureTime = getTimeInput("Enter departure time(hh:mm):\n")
-					if departureTime.Before(arrivalTime) {
-						fmt.Println("\033[1;31mEmployee can't leave before arrival.\033[0m")
-						continue
-					}
-					break
-				}
+				arrivalTime, departureTime := getWorkTimes()
 
 				report[employee].TimeEntries[weekday] = TimeEntry{
 					ArrivalTime:   arrivalTime,

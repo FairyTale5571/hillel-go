@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// This is main function
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 

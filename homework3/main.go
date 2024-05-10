@@ -10,11 +10,15 @@ import (
 
 type WorkTimeLog struct {
 	currentName string
-	journal     map[string]*TimeRecord
+	journal     map[string]map[int]*Week
 }
 
-type TimeRecord struct {
-	WeekTime  int
+type Week struct {
+	Days      [7]*Day
+	WeekHours float64
+}
+
+type Day struct {
 	StartTime string
 	EndTime   string
 }
@@ -46,7 +50,11 @@ func (w *WorkTimeLog) startTimeRegistration() bool {
 		return false
 	}
 
-	w.journal[w.currentName].StartTime = inputTime
+	w.ensureWeekAndDay()
+	w.journal[w.currentName][w.currentWeekNumber()].Days[time.Now().Weekday()].StartTime = inputTime
+
+	hours, _ := w.calculateHours()
+	w.addWeekHours(hours)
 
 	return true
 }
@@ -64,24 +72,48 @@ func (w *WorkTimeLog) endTimeRegistration() bool {
 		return false
 	}
 
-	w.journal[w.currentName].EndTime = inputTime
+	w.ensureWeekAndDay()
+	w.journal[w.currentName][w.currentWeekNumber()].Days[time.Now().Weekday()].EndTime = inputTime
+	hours, _ := w.calculateHours()
+	w.addWeekHours(hours)
 
 	return true
 }
 
-func (w *WorkTimeLog) calculateHours() {
-	start, _ := time.Parse("15:04", w.journal[w.currentName].StartTime)
-	end, _ := time.Parse("15:04", w.journal[w.currentName].EndTime)
+func (w *WorkTimeLog) calculateHours() (float64, error) {
+	startTime := w.journal[w.currentName][w.currentWeekNumber()].Days[time.Now().Weekday()].StartTime
+	endTime := w.journal[w.currentName][w.currentWeekNumber()].Days[time.Now().Weekday()].EndTime
+
+	if startTime == "" || endTime == "" {
+		return 0, fmt.Errorf("час початку або завершення робочого дня не зареєстровано")
+	}
+
+	start, errStart := time.Parse("15:04", strings.TrimSpace(startTime))
+	end, errEnd := time.Parse("15:04", strings.TrimSpace(endTime))
+	if errStart != nil || errEnd != nil {
+		return 0, fmt.Errorf("невдалий парсинг часу: %v, %v", errStart, errEnd)
+	}
+
 	duration := end.Sub(start).Hours()
 	if duration < 0 {
 		duration += 24
 	}
-	//fmt.Println("startTime: " + start.Format("15:04"))
-	//fmt.Println("endTime: " + end.Format("15:04"))
-	//fmt.Println(start)
-	//fmt.Println(w.journal[w.currentName].StartTime)
+
+	return duration, nil
+}
+
+func (w *WorkTimeLog) dayHoursDisplay() {
+	duration, err := w.calculateHours()
+	if err != nil {
+		fmt.Println("Помилка:", err)
+		return
+	}
+
 	fmt.Printf("Відпрацьовано за день: %.2f годин\n", duration)
-	w.journal[w.currentName].WeekTime += int(duration)
+}
+
+func (w *WorkTimeLog) addWeekHours(duration float64) {
+	w.journal[w.currentName][w.currentWeekNumber()].WeekHours += duration
 }
 
 func (w *WorkTimeLog) inputTimeCheck(inputTime string) bool {
@@ -101,13 +133,13 @@ func (w *WorkTimeLog) userOptions() {
 		fmt.Println("\n1. Зареєструвати час початку робочого дня")
 		fmt.Println("2. Час закінчення робочого дня")
 		fmt.Println("3. Всього відпрацьовано за день")
-		fmt.Println("4. Всього відпрацьовано за тижлдень")
+		fmt.Println("4. Всього відпрацьовано за тиждень")
 		fmt.Println("5. Exit")
-		fmt.Print("Choose an option: ")
+		fmt.Print("Оберіть опцію: ")
 
 		var choice int
 		if _, err := fmt.Scanln(&choice); err != nil {
-			fmt.Println("Invalid input, please try again.")
+			fmt.Println("Невірний ввід. Спробуйте ще")
 			continue
 		}
 
@@ -123,13 +155,14 @@ func (w *WorkTimeLog) userOptions() {
 				continue
 			}
 		case 3:
-			w.calculateHours()
+			w.dayHoursDisplay()
 		case 4:
-
+			w.weekTimeDisplay()
 		case 5:
-
+			fmt.Println("Вихід з програми.")
+			return
 		default:
-			fmt.Println("Invalid choice, please try again.")
+			fmt.Println("Невірна опція. Спробуйте ще раз.")
 		}
 	}
 
@@ -139,12 +172,36 @@ func (w *WorkTimeLog) nameRegistration(name string) {
 	_, ok := w.journal[name]
 
 	if !ok {
-		w.journal[name] = &TimeRecord{}
+		w.journal[name] = make(map[int]*Week)
 	}
+
 	w.currentName = name
 }
 
+func (w *WorkTimeLog) weekTimeDisplay() {
+	fmt.Printf("Всього відпрацьовано за тиждень: %0.2f", w.journal[w.currentName][w.currentWeekNumber()].WeekHours)
+}
+
+func (w *WorkTimeLog) currentWeekNumber() int {
+	_, weekNumber := time.Now().ISOWeek()
+
+	return weekNumber
+}
+
+func (w *WorkTimeLog) ensureWeekAndDay() {
+	if w.journal[w.currentName] == nil {
+		w.journal[w.currentName] = make(map[int]*Week)
+	}
+	if w.journal[w.currentName][w.currentWeekNumber()] == nil {
+		w.journal[w.currentName][w.currentWeekNumber()] = &Week{}
+	}
+	dayIndex := time.Now().Weekday()
+	if w.journal[w.currentName][w.currentWeekNumber()].Days[dayIndex] == nil {
+		w.journal[w.currentName][w.currentWeekNumber()].Days[dayIndex] = &Day{}
+	}
+}
+
 func main() {
-	workLogger := WorkTimeLog{journal: make(map[string]*TimeRecord)}
+	workLogger := WorkTimeLog{journal: make(map[string]map[int]*Week)}
 	workLogger.Run()
 }

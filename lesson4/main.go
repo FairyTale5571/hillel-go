@@ -14,12 +14,12 @@ type Product struct {
 	Discount float64
 }
 
-func CalculateFinalPrice(p Product) (*float64, error) {
+func CalculateFinalPrice(p Product) (float64, error) {
 	if p.Price < 0 || p.Discount < 0 || p.Discount > 100 {
-		return nil, fmt.Errorf("invalid input: price and discount must be between 0 and 100")
+		return 0, fmt.Errorf("invalid input: price and discount must be between 0 and 100")
 	}
 	result := (p.Price * (100 - p.Discount)) / 100
-	return &result, nil
+	return result, nil
 }
 
 func DisplayProductDetails(p Product) {
@@ -30,20 +30,20 @@ func DisplayProductDetails(p Product) {
 	}
 	discountAmount := (p.Price * p.Discount) / 100
 	fmt.Printf("Product: %s, Original Price: $%.2f, Discount: %.2f%%, Discount Amount: $%.2f, Final Price: $%.2f\n",
-		p.Name, p.Price, p.Discount, discountAmount, *finalPrice)
+		p.Name, p.Price, p.Discount, discountAmount, finalPrice)
 }
 
-func CalculateTotals(products []Product) (*float64, *float64, error) {
+func CalculateTotals(products []Product) (float64, float64, error) {
 	var totalOriginal, totalFinal float64
 	for _, product := range products {
 		finalPrice, err := CalculateFinalPrice(product)
 		if err != nil {
-			return nil, nil, err
+			return 0, 0, err
 		}
 		totalOriginal += product.Price
-		totalFinal += *finalPrice
+		totalFinal += finalPrice
 	}
-	return &totalOriginal, &totalFinal, nil
+	return totalOriginal, totalFinal, nil
 }
 
 func main() {
@@ -86,6 +86,6 @@ func main() {
 		fmt.Println("Error calculating totals:", err)
 		return
 	}
-	fmt.Printf("Total Original Price: $%.2f\n", *totalOriginal)
-	fmt.Printf("Total Final Price after Discounts: $%.2f\n", *totalFinal)
+	fmt.Printf("Total Original Price: $%.2f\n", totalOriginal)
+	fmt.Printf("Total Final Price after Discounts: $%.2f\n", totalFinal)
 }

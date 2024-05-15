@@ -45,8 +45,8 @@ func TestCalculate(t *testing.T) {
 				t.Errorf("CalculateTotals %s: expected error but got none", tt.name)
 			}
 		}
-		if original != nil && *original != tt.expectedOriginal || final != nil && *final != tt.expectedFinal {
-			t.Errorf("CalculateTotals %s: got %v and %v, want %v and %v", tt.name, *original, *final, tt.expectedOriginal, tt.expectedFinal)
+		if original != tt.expectedOriginal || final != tt.expectedFinal {
+			t.Errorf("CalculateTotals %s: got %v and %v, want %v and %v", tt.name, original, final, tt.expectedOriginal, tt.expectedFinal)
 		}
 	}
 
@@ -60,8 +60,8 @@ func TestCalculate(t *testing.T) {
 				t.Errorf("CalculateFinalPrice %s: expected error but got none", tt.name)
 			}
 		}
-		if result != nil && *result != tt.expected {
-			t.Errorf("CalculateFinalPrice %s: got %v, want %v", tt.name, *result, tt.expected)
+		if result != tt.expected {
+			t.Errorf("CalculateFinalPrice %s: got %v, want %v", tt.name, result, tt.expected)
 		}
 	}
 }

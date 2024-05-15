@@ -1,39 +1,50 @@
 package main
 
 import (
-	"log"
-	"os"
+	"fmt"
+	"math/rand"
+	"time"
 )
 
 func main() {
-	// Замініть "YOUR_TELEGRAM_BOT_TOKEN" на ваш фактичний токен бота
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
-	if err != nil {
-		log.Panic(err)
-	}
+	rand.Seed(time.Now().UnixNano())
+	target := generateTarget(1, 100)
+	fmt.Println("Target:", target)
+	fmt.Println("Гра 'Вгадай число'!")
+	fmt.Println("Комп'ютер загадав число від 1 до 100.")
 
-	bot.Debug = true
+	attempts := playGame(target)
+	fmt.Printf("Вітаємо! Уявний гравець вгадав число за %d спроб.\n", attempts)
+}
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+// generateTarget створює випадкове число в заданому діапазоні.
+func generateTarget(min, max int) int {
+	return rand.Intn(max-min+1) + min
+}
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+// playGame виконує логіку гри, де уявний гравець намагається вгадати число.
+func playGame(target int) int {
+	min := 1
+	max := 100
+	attempts := 0
 
-	updates := bot.GetUpdatesChan(u)
+	for {
+		time.Sleep(3 * time.Second)
+		guess := (min + max) / 2
+		attempts++
+		fmt.Printf("Уявний гравець вгадує: %d\n", guess)
 
-	for update := range updates {
-		if update.Message == nil { // ignore any non-Message updates
-			continue
+		if guess < target {
+			fmt.Println("Занадто мало.")
+			min = guess + 1
+			fmt.Println("guess:", guess)
+		} else if guess > target {
+			fmt.Println("Занадто багато.")
+			max = guess - 1
+			fmt.Println("guess:", guess)
+		} else {
+			break
 		}
-
-		// Відповідь на кожне отримане повідомлення
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		msg.ReplyToMessageID = update.Message.MessageID
-
-		if _, err := bot.Send(msg); err != nil {
-			log.Panic(err)
-		}
 	}
+	return attempts
 }

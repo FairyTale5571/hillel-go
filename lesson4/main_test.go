@@ -4,118 +4,70 @@ import (
 	"testing"
 )
 
-func TestCalculateFinalPrice_ValidInput(t *testing.T) {
-	product := Product{Name: "Name1", Price: 100.0, Discount: 20.0}
-	expected := 80.0
-	result, err := CalculateFinalPrice(product)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
+type CalculateTotalsTest struct {
+	name             string
+	products         []Product
+	expectedOriginal float64
+	expectedFinal    float64
+	wantErr          bool
+}
+
+func TestCalculateTotals(t *testing.T) {
+	tests := []CalculateTotalsTest{
+		{"No Discounts", []Product{{Name: "Name1", Price: 200.0, Discount: 0.0}}, 200.0, 200.0, false},
+		{"With Discounts", []Product{{Name: "Name1", Price: 200.0, Discount: 25.0}}, 200.0, 150.0, false},
+		{"Multiple Products", []Product{{Name: "Name1", Price: 100.0, Discount: 10.0}, {Name: "Name2", Price: 200.0, Discount: 20.0}}, 300.0, 250.0, false},
 	}
-	if *result != expected {
-		t.Errorf("TestCalculateFinalPrice failed: expected %f, got %f", expected, *result)
+
+	for _, tt := range tests {
+		original, final, err := CalculateTotals(tt.products)
+		if (err != nil) != tt.wantErr {
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("%s: unexpected error: %v", tt.name, err)
+				}
+			} else {
+				if tt.wantErr {
+					t.Errorf("%s: expected error but got none", tt.name)
+				}
+			}
+		}
+		if original != nil && *original != tt.expectedOriginal || final != nil && *final != tt.expectedFinal {
+			t.Errorf("%s: got %v and %v, want %v and %v", tt.name, *original, *final, tt.expectedOriginal, tt.expectedFinal)
+		}
 	}
 }
 
-func TestCalculateFinalPrice_NegativePrice(t *testing.T) {
-	product := Product{Name: "Name1", Price: -100.0, Discount: 10.0}
-	_, err := CalculateFinalPrice(product)
-	if err == nil {
-		t.Errorf("Expected error for negative price, got nil")
+func TestCalculateFinalPrice(t *testing.T) {
+	tests := []struct {
+		name     string
+		product  Product
+		expected float64
+		wantErr  bool
+	}{
+		{"Valid Input", Product{Name: "Name1", Price: 100.0, Discount: 20.0}, 80.0, false},
+		{"Negative Price", Product{Name: "Name1", Price: -100.0, Discount: 10.0}, 0.0, true},
+		{"Discount Over 100", Product{Name: "Name1", Price: 100.0, Discount: 150.0}, 0.0, true},
+		{"Negative Discount", Product{Name: "Name1", Price: 100.0, Discount: -20.0}, 0.0, true},
+		{"Zero Discount", Product{Name: "Name1", Price: 100.0, Discount: 0.0}, 100.0, false},
+		{"Zero Price", Product{Name: "Freebie", Price: 0.0, Discount: 20.0}, 0.0, false},
 	}
-}
 
-func TestCalculateFinalPrice_DiscountOver100(t *testing.T) {
-	product := Product{Name: "Name1", Price: 100.0, Discount: 150.0}
-	_, err := CalculateFinalPrice(product)
-	if err == nil {
-		t.Errorf("Expected error for discount over 100%%, got nil")
-	}
-}
-
-func TestCalculateFinalPrice_NegativeDiscount(t *testing.T) {
-	product := Product{Name: "Name1", Price: 100.0, Discount: -20.0}
-	_, err := CalculateFinalPrice(product)
-	if err == nil {
-		t.Errorf("Expected error for negative discount, got nil")
-	}
-}
-
-func TestCalculateTotals_NoDiscounts(t *testing.T) {
-	products := []Product{{Name: "Name1", Price: 200.0, Discount: 0.0}}
-	expectedOriginal := 200.0
-	expectedFinal := 200.0
-	original, final, err := CalculateTotals(products)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if *original != expectedOriginal || *final != expectedFinal {
-		t.Errorf("TestCalculateTotals_NoDiscounts failed: expected %f and %f, got %f and %f", expectedOriginal, expectedFinal, *original, *final)
-	}
-}
-
-func TestCalculateTotals_WithDiscounts(t *testing.T) {
-	products := []Product{{Name: "Name1", Price: 200.0, Discount: 25.0}}
-	expectedOriginal := 200.0
-	expectedFinal := 150.0
-	original, final, err := CalculateTotals(products)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if *original != expectedOriginal || *final != expectedFinal {
-		t.Errorf("TestCalculateTotals_WithDiscounts failed: expected %f and %f, got %f and %f", expectedOriginal, expectedFinal, *original, *final)
-	}
-}
-
-func TestMultipleProducts(t *testing.T) {
-	products := []Product{
-		{Name: "Name1", Price: 100.0, Discount: 10.0},
-		{Name: "Name2", Price: 200.0, Discount: 20.0},
-	}
-	_, _, err := CalculateTotals(products)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if len(products) != 2 {
-		t.Errorf("Expected 2 products, got %d", len(products))
-	}
-}
-
-func TestZeroDiscount(t *testing.T) {
-	product := Product{Name: "Name1", Price: 100.0, Discount: 0.0}
-	expected := 100.0
-	result, err := CalculateFinalPrice(product)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if *result != expected {
-		t.Errorf("TestZeroDiscount failed: expected %f, got %f", expected, *result)
-	}
-}
-
-func TestZeroPrice(t *testing.T) {
-	product := Product{Name: "Freebie", Price: 0.0, Discount: 20.0}
-	expected := 0.0
-	result, err := CalculateFinalPrice(product)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if *result != expected {
-		t.Errorf("TestZeroPrice failed: expected %f, got %f", expected, *result)
-	}
-}
-
-func TestFinalSums(t *testing.T) {
-	products := []Product{
-		{Name: "Name1", Price: 100.0, Discount: 10.0},
-		{Name: "Name2", Price: 200.0, Discount: 20.0},
-	}
-	expectedOriginal := 300.0
-	expectedFinal := 250.0
-	original, final, err := CalculateTotals(products)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if *original != expectedOriginal || *final != expectedFinal {
-		t.Errorf("TestFinalSums failed: expected %f and %f, got %f and %f", expectedOriginal, expectedFinal, *original, *final)
+	for _, tt := range tests {
+		result, err := CalculateFinalPrice(tt.product)
+		if (err != nil) != tt.wantErr {
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("%s: unexpected error: %v", tt.name, err)
+				}
+			} else {
+				if tt.wantErr {
+					t.Errorf("%s: expected error but got none", tt.name)
+				}
+			}
+		}
+		if result != nil && *result != tt.expected {
+			t.Errorf("%s: got %v, want %v", tt.name, *result, tt.expected)
+		}
 	}
 }

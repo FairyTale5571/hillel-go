@@ -12,39 +12,21 @@ type CalculateTotalsTest struct {
 	wantErr          bool
 }
 
-func TestCalculateTotals(t *testing.T) {
-	tests := []CalculateTotalsTest{
+type CalculateFinalPriceTest struct {
+	name     string
+	product  Product
+	expected float64
+	wantErr  bool
+}
+
+func TestCalculate(t *testing.T) {
+	totalTests := []CalculateTotalsTest{
 		{"No Discounts", []Product{{Name: "Name1", Price: 200.0, Discount: 0.0}}, 200.0, 200.0, false},
 		{"With Discounts", []Product{{Name: "Name1", Price: 200.0, Discount: 25.0}}, 200.0, 150.0, false},
 		{"Multiple Products", []Product{{Name: "Name1", Price: 100.0, Discount: 10.0}, {Name: "Name2", Price: 200.0, Discount: 20.0}}, 300.0, 250.0, false},
 	}
 
-	for _, tt := range tests {
-		original, final, err := CalculateTotals(tt.products)
-		if (err != nil) != tt.wantErr {
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("%s: unexpected error: %v", tt.name, err)
-				}
-			} else {
-				if tt.wantErr {
-					t.Errorf("%s: expected error but got none", tt.name)
-				}
-			}
-		}
-		if original != nil && *original != tt.expectedOriginal || final != nil && *final != tt.expectedFinal {
-			t.Errorf("%s: got %v and %v, want %v and %v", tt.name, *original, *final, tt.expectedOriginal, tt.expectedFinal)
-		}
-	}
-}
-
-func TestCalculateFinalPrice(t *testing.T) {
-	tests := []struct {
-		name     string
-		product  Product
-		expected float64
-		wantErr  bool
-	}{
+	finalPriceTests := []CalculateFinalPriceTest{
 		{"Valid Input", Product{Name: "Name1", Price: 100.0, Discount: 20.0}, 80.0, false},
 		{"Negative Price", Product{Name: "Name1", Price: -100.0, Discount: 10.0}, 0.0, true},
 		{"Discount Over 100", Product{Name: "Name1", Price: 100.0, Discount: 150.0}, 0.0, true},
@@ -53,21 +35,33 @@ func TestCalculateFinalPrice(t *testing.T) {
 		{"Zero Price", Product{Name: "Freebie", Price: 0.0, Discount: 20.0}, 0.0, false},
 	}
 
-	for _, tt := range tests {
+	// Running CalculateTotals tests
+	for _, tt := range totalTests {
+		original, final, err := CalculateTotals(tt.products)
+		if (err != nil) != tt.wantErr {
+			if err != nil {
+				t.Errorf("CalculateTotals %s: unexpected error: %v", tt.name, err)
+			} else {
+				t.Errorf("CalculateTotals %s: expected error but got none", tt.name)
+			}
+		}
+		if original != nil && *original != tt.expectedOriginal || final != nil && *final != tt.expectedFinal {
+			t.Errorf("CalculateTotals %s: got %v and %v, want %v and %v", tt.name, *original, *final, tt.expectedOriginal, tt.expectedFinal)
+		}
+	}
+
+	// Running CalculateFinalPrice tests
+	for _, tt := range finalPriceTests {
 		result, err := CalculateFinalPrice(tt.product)
 		if (err != nil) != tt.wantErr {
 			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("%s: unexpected error: %v", tt.name, err)
-				}
+				t.Errorf("CalculateFinalPrice %s: unexpected error: %v", tt.name, err)
 			} else {
-				if tt.wantErr {
-					t.Errorf("%s: expected error but got none", tt.name)
-				}
+				t.Errorf("CalculateFinalPrice %s: expected error but got none", tt.name)
 			}
 		}
 		if result != nil && *result != tt.expected {
-			t.Errorf("%s: got %v, want %v", tt.name, *result, tt.expected)
+			t.Errorf("CalculateFinalPrice %s: got %v, want %v", tt.name, *result, tt.expected)
 		}
 	}
 }
